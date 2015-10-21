@@ -88,6 +88,7 @@ public class DataManager extends SQLiteOpenHelper {
             item.office = c.getString(c.getColumnIndex(AddressDB.AddessTable.COLUMN_OFFICE));
             list.add(item);
         }
+        c.close();
         return list;
     }
 

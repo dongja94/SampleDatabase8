@@ -1,24 +1,28 @@
 package com.example.dongja94.sampledatabase;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-
-import java.util.List;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
     ListView listView;
-    ArrayAdapter<AddressItem> mAdapter;
+//    ArrayAdapter<AddressItem> mAdapter;
+    SimpleCursorAdapter mAdapter;
+
+    int nameColumnIndex = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +41,22 @@ public class MainActivity extends AppCompatActivity {
         });
 
         listView = (ListView)findViewById(R.id.listView);
-        mAdapter = new ArrayAdapter<AddressItem>(this, android.R.layout.simple_list_item_1);
+//        mAdapter = new ArrayAdapter<AddressItem>(this, android.R.layout.simple_list_item_1);
+        String[] from = {AddressDB.AddessTable.COLUMN_NAME, AddressDB.AddessTable.COLUMN_ADDRESS};
+        int[] to = {R.id.text_name, R.id.text_address};
+        mAdapter = new SimpleCursorAdapter(this, R.layout.view_item, null, from, to, SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        mAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
+            @Override
+            public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+                if (columnIndex == nameColumnIndex) {
+                    TextView tv = (TextView)view;
+                    String name = cursor.getString(columnIndex);
+                    tv.setText(Html.fromHtml("<b>"+name+"</b>"));
+                    return true;
+                }
+                return false;
+            }
+        });
         listView.setAdapter(mAdapter);
 
         Button btn = (Button)findViewById(R.id.btn_add);
@@ -52,11 +71,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        List<AddressItem> list = DataManager.getInstance().getAddressList(null);
-        mAdapter.clear();
-        for (AddressItem item : list) {
-            mAdapter.add(item);
-        }
+        Cursor c = DataManager.getInstance().getAddressCursor(null);
+        nameColumnIndex = c.getColumnIndex(AddressDB.AddessTable.COLUMN_NAME);
+        mAdapter.changeCursor(c);
+//        List<AddressItem> list = DataManager.getInstance().getAddressList(null);
+//        mAdapter.clear();
+//        for (AddressItem item : list) {
+//            mAdapter.add(item);
+//        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mAdapter.changeCursor(null);
     }
 
     @Override
