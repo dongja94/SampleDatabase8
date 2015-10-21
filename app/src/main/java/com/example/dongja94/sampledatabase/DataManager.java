@@ -93,15 +93,22 @@ public class DataManager extends SQLiteOpenHelper {
 
     public Cursor getAddressCursor(String keyword) {
         SQLiteDatabase db = getReadableDatabase();
-        String[] columns = {"_id", "name", "address", "phone", "office"};
+        String[] columns = {AddressDB.AddessTable._ID,
+                AddressDB.AddessTable.COLUMN_NAME,
+                AddressDB.AddessTable.COLUMN_ADDRESS,
+                AddressDB.AddessTable.COLUMN_PHONE,
+                AddressDB.AddessTable.COLUMN_OFFICE};
         String selection = null;
         String[] args = null;
         if (!TextUtils.isEmpty(keyword)) {
-            selection = "name LIKE ? OR address LIKE ? OR phone LIKE ? OR office LIKE ?";
+            selection = AddressDB.AddessTable.COLUMN_NAME + " LIKE ? OR "+
+                    AddressDB.AddessTable.COLUMN_ADDRESS+" LIKE ? OR "+
+                    AddressDB.AddessTable.COLUMN_PHONE+" LIKE ? OR "+
+                    AddressDB.AddessTable.COLUMN_OFFICE+" LIKE ?";
             args = new String[] {"%" + keyword + "%","%" + keyword + "%","%" + keyword + "%","%" + keyword + "%"};
         }
-        String orderBy = " name COLLATE LOCALIZED ASC";
-        Cursor c = db.query("addressTable", columns, selection, args, null, null, orderBy);
+        String orderBy = AddressDB.AddessTable.COLUMN_NAME+" COLLATE LOCALIZED ASC";
+        Cursor c = db.query(AddressDB.AddessTable.TABLE_NAME, columns, selection, args, null, null, orderBy);
         return c;
     }
 }
