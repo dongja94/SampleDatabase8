@@ -12,6 +12,7 @@ import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -42,8 +43,8 @@ public class MainActivity extends AppCompatActivity {
 
         listView = (ListView)findViewById(R.id.listView);
 //        mAdapter = new ArrayAdapter<AddressItem>(this, android.R.layout.simple_list_item_1);
-        String[] from = {AddressDB.AddessTable.COLUMN_NAME, AddressDB.AddessTable.COLUMN_ADDRESS};
-        int[] to = {R.id.text_name, R.id.text_address};
+        String[] from = {AddressDB.AddessTable.COLUMN_NAME, AddressDB.MessageTable.COLUMN_MESSAGE};
+        int[] to = {R.id.text_name, R.id.text_message};
         mAdapter = new SimpleCursorAdapter(this, R.layout.view_item, null, from, to, SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         mAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
             @Override
@@ -58,6 +59,26 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         listView.setAdapter(mAdapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Cursor c = (Cursor)listView.getItemAtPosition(position);
+                AddressItem item = new AddressItem();
+                item._id = id;
+                item.name = c.getString(c.getColumnIndex(AddressDB.AddessTable.COLUMN_NAME));
+                item.address = c.getString(c.getColumnIndex(AddressDB.AddessTable.COLUMN_ADDRESS));
+                item.phone = c.getString(c.getColumnIndex(AddressDB.AddessTable.COLUMN_PHONE));
+                item.office = c.getString(c.getColumnIndex(AddressDB.AddessTable.COLUMN_OFFICE));
+                item.lastMessageId = c.getLong(c.getColumnIndex(AddressDB.AddessTable.COLUMN_LAST_MESSAGE_ID));
+                item.lastMessage = c.getString(c.getColumnIndex(AddressDB.MessageTable.COLUMN_MESSAGE));
+                item.timestamp = c.getLong(c.getColumnIndex(AddressDB.MessageTable.COLUMN_CREATED));
+
+                Intent intent = new Intent(MainActivity.this, ChattingActivity.class);
+                intent.putExtra(ChattingActivity.EXTRA_ITEM, item);
+                startActivity(intent);
+
+            }
+        });
 
         Button btn = (Button)findViewById(R.id.btn_add);
         btn.setOnClickListener(new View.OnClickListener() {

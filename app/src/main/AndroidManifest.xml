@@ -24,6 +24,11 @@
             android:label="@string/title_activity_dbadd"
             android:theme="@style/AppTheme.NoActionBar" >
         </activity>
+        <activity
+            android:name=".ChattingActivity"
+            android:label="@string/title_activity_chatting"
+            android:theme="@style/AppTheme.NoActionBar" >
+        </activity>
     </application>
 
 </manifest>

@@ -21,13 +21,13 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Address"
+        android:text="Message"
         app:layout_columnWeight="1"/>
     <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Name"
-        android:id="@+id/text_address"
+        android:id="@+id/text_message"
         app:layout_columnWeight="3"/>
 </android.support.v7.widget.GridLayout>

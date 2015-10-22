@@ -35,7 +35,17 @@ public class DataManager extends SQLiteOpenHelper {
                 AddressDB.AddessTable.COLUMN_NAME+" TEXT NOT NULL," +
                 AddressDB.AddessTable.COLUMN_ADDRESS+" TEXT," +
                 AddressDB.AddessTable.COLUMN_PHONE+" TEXT," +
-                AddressDB.AddessTable.COLUMN_OFFICE+" TEXT);";
+                AddressDB.AddessTable.COLUMN_OFFICE+" TEXT," +
+                AddressDB.AddessTable.COLUMN_LAST_MESSAGE_ID + " INTEGER);";
+        db.execSQL(sql);
+
+        sql = "CREATE TABLE " + AddressDB.MessageTable.TABLE_NAME + "(" +
+                AddressDB.MessageTable._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                AddressDB.MessageTable.COLUMN_USER_ID + " INTEGER," +
+                AddressDB.MessageTable.COLUMN_TYPE + " INTEGER," +
+                AddressDB.MessageTable.COLUMN_MESSAGE + " TEXT," +
+                AddressDB.MessageTable.COLUMN_CREATED + " DATETIME DEFAULT CURRENT_TIMESTAMP);";
+
         db.execSQL(sql);
     }
 
@@ -44,6 +54,49 @@ public class DataManager extends SQLiteOpenHelper {
 
     }
 
+    public void insertMessage(AddressItem item, int type, String message) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        try {
+            db.beginTransaction();
+
+            ContentValues values = new ContentValues();
+            values.put(AddressDB.MessageTable.COLUMN_USER_ID, item._id);
+            values.put(AddressDB.MessageTable.COLUMN_TYPE, type);
+            values.put(AddressDB.MessageTable.COLUMN_MESSAGE, message);
+            long id = db.insert(AddressDB.MessageTable.TABLE_NAME, null, values);
+
+            values.clear();
+            values.put(AddressDB.AddessTable.COLUMN_LAST_MESSAGE_ID, id);
+            String selection = AddressDB.AddessTable._ID + " = ?";
+            String[] args = {"" + item._id};
+            db.update(AddressDB.AddessTable.TABLE_NAME, values, selection, args);
+
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    public Cursor getMessageCursor(long userid) {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] columns = {AddressDB.MessageTable.TABLE_NAME + "." + AddressDB.MessageTable._ID,
+                AddressDB.AddessTable.COLUMN_NAME,
+                AddressDB.MessageTable.COLUMN_MESSAGE,
+                AddressDB.MessageTable.COLUMN_TYPE,
+                AddressDB.MessageTable.COLUMN_CREATED};
+
+        String tableName = AddressDB.MessageTable.TABLE_NAME + " INNER JOIN " +
+                AddressDB.AddessTable.TABLE_NAME + " ON " +
+                AddressDB.MessageTable.TABLE_NAME + "." + AddressDB.MessageTable.COLUMN_USER_ID +
+                " = " +
+                AddressDB.AddessTable.TABLE_NAME + "." + AddressDB.AddessTable._ID;
+
+        String selection = AddressDB.MessageTable.COLUMN_USER_ID + " = ?";
+        String[] args = {"" + userid};
+        String orderBy = AddressDB.MessageTable.COLUMN_CREATED + " ASC";
+        return db.query(tableName,columns,selection, args, null, null, orderBy);
+    }
 
     public void add(AddressItem item) {
         SQLiteDatabase db = getWritableDatabase();
@@ -86,6 +139,7 @@ public class DataManager extends SQLiteOpenHelper {
             item.address = c.getString(c.getColumnIndex(AddressDB.AddessTable.COLUMN_ADDRESS));
             item.phone = c.getString(c.getColumnIndex(AddressDB.AddessTable.COLUMN_PHONE));
             item.office = c.getString(c.getColumnIndex(AddressDB.AddessTable.COLUMN_OFFICE));
+            item.lastMessageId = c.getInt(c.getColumnIndex(AddressDB.AddessTable.COLUMN_LAST_MESSAGE_ID));
             list.add(item);
         }
         c.close();
@@ -94,11 +148,20 @@ public class DataManager extends SQLiteOpenHelper {
 
     public Cursor getAddressCursor(String keyword) {
         SQLiteDatabase db = getReadableDatabase();
-        String[] columns = {AddressDB.AddessTable._ID,
+        String[] columns = {AddressDB.AddessTable.TABLE_NAME + "." + AddressDB.AddessTable._ID,
                 AddressDB.AddessTable.COLUMN_NAME,
                 AddressDB.AddessTable.COLUMN_ADDRESS,
                 AddressDB.AddessTable.COLUMN_PHONE,
-                AddressDB.AddessTable.COLUMN_OFFICE};
+                AddressDB.AddessTable.COLUMN_OFFICE,
+                AddressDB.AddessTable.COLUMN_LAST_MESSAGE_ID,
+                AddressDB.MessageTable.COLUMN_MESSAGE,
+                AddressDB.MessageTable.COLUMN_CREATED};
+        String tableName = AddressDB.AddessTable.TABLE_NAME + " LEFT OUTER JOIN " +
+                AddressDB.MessageTable.TABLE_NAME + " ON " +
+                AddressDB.AddessTable.TABLE_NAME + "." + AddressDB.AddessTable.COLUMN_LAST_MESSAGE_ID +
+                " = " +
+                AddressDB.MessageTable.TABLE_NAME + "." + AddressDB.MessageTable._ID;
+
         String selection = null;
         String[] args = null;
         if (!TextUtils.isEmpty(keyword)) {
@@ -108,8 +171,11 @@ public class DataManager extends SQLiteOpenHelper {
                     AddressDB.AddessTable.COLUMN_OFFICE+" LIKE ?";
             args = new String[] {"%" + keyword + "%","%" + keyword + "%","%" + keyword + "%","%" + keyword + "%"};
         }
+
         String orderBy = AddressDB.AddessTable.COLUMN_NAME+" COLLATE LOCALIZED ASC";
-        Cursor c = db.query(AddressDB.AddessTable.TABLE_NAME, columns, selection, args, null, null, orderBy);
+        Cursor c = db.query(tableName, columns, selection, args, null, null, orderBy);
         return c;
     }
+
+
 }
