@@ -42,9 +42,9 @@
         android:layout_height="wrap_content"
         android:text="add"
         android:id="@+id/btn_add"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignBottom="@+id/radioGroup"
+        android:layout_alignRight="@+id/edit_input"
+        android:layout_alignEnd="@+id/edit_input" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -53,8 +53,8 @@
         android:layout_above="@+id/btn_add"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_alignRight="@+id/btn_add"
-        android:layout_alignEnd="@+id/btn_add" />
+        android:layout_alignRight="@+id/listView"
+        android:layout_alignEnd="@+id/listView" />
 
     <ListView
         android:layout_width="wrap_content"

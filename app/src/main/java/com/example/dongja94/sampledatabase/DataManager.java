@@ -6,7 +6,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -60,10 +62,35 @@ public class DataManager extends SQLiteOpenHelper {
         try {
             db.beginTransaction();
 
+            long currentTime = System.currentTimeMillis();
+
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(item.timestamp);
+            int lastyear = c.get(Calendar.YEAR);
+            int lastmonth = c.get(Calendar.MONTH);
+            int lastday = c.get(Calendar.DAY_OF_MONTH);
+
+            c.setTimeInMillis(currentTime);
+            int currentyear = c.get(Calendar.YEAR);
+            int currentmonth = c.get(Calendar.MONTH);
+            int currentday = c.get(Calendar.DAY_OF_MONTH);
             ContentValues values = new ContentValues();
+
+            if (lastyear != currentyear || lastmonth != currentmonth || lastday != currentday) {
+                values.put(AddressDB.MessageTable.COLUMN_USER_ID, item._id);
+                values.put(AddressDB.MessageTable.COLUMN_TYPE, AddressDB.TYPE_DATE);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                String strNow = sdf.format(c.getTime());
+                values.put(AddressDB.MessageTable.COLUMN_MESSAGE, strNow);
+                values.put(AddressDB.MessageTable.COLUMN_CREATED, currentTime);
+                db.insert(AddressDB.MessageTable.TABLE_NAME, null, values);
+            }
+
+            values.clear();
             values.put(AddressDB.MessageTable.COLUMN_USER_ID, item._id);
             values.put(AddressDB.MessageTable.COLUMN_TYPE, type);
             values.put(AddressDB.MessageTable.COLUMN_MESSAGE, message);
+            values.put(AddressDB.MessageTable.COLUMN_CREATED, currentTime);
             long id = db.insert(AddressDB.MessageTable.TABLE_NAME, null, values);
 
             values.clear();
@@ -71,6 +98,8 @@ public class DataManager extends SQLiteOpenHelper {
             String selection = AddressDB.AddessTable._ID + " = ?";
             String[] args = {"" + item._id};
             db.update(AddressDB.AddessTable.TABLE_NAME, values, selection, args);
+
+            item.timestamp = currentTime;
 
             db.setTransactionSuccessful();
         } finally {
